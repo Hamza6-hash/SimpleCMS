@@ -3,15 +3,7 @@ export function createCategories(collections) {
 		{
 			name: 'Collections',
 			icon: 'bi:collection',
-			collections: [
-				collections.Posts2,
-				collections.Names,
-				collections.Media,
-				collections.ImageArray,
-				collections.Relation,
-				collections.WidgetTest,
-				collections.Posts
-			]
+			collections: [collections.Posts, collections.Names, collections.Media, collections.ImageArray, collections.Relation, collections.WidgetTest]
 		},
 		{ name: 'Menu', icon: 'bi:menu-button-wide', collections: [collections.Menu] }
 	];

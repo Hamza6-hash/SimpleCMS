@@ -269,16 +269,16 @@ export const fieldsToSchema = (fields: Array<any>) => {
 };
 
 // Finds documents in collection that match query
-export async function find(query: object, collection: Schema) {
-	if (!collection) return;
+export async function find(query: object, collectionName: string) {
+	if (!collectionName) return;
 	const _query = JSON.stringify(query);
-	return (await axios.get(`/api/find?collection=${collection.name}&query=${_query}`)).data;
+	return (await axios.get(`/api/find?collection=${collectionName}&query=${_query}`)).data;
 }
 
 // Finds document in collection with specified ID
-export async function findById(id: string, collection: Schema) {
-	if (!id || !collection) return;
-	return (await axios.get(`/api/find?collection=${collection.name}&id=${id}`)).data;
+export async function findById(id: string, collectionName: string) {
+	if (!id || !collectionName) return;
+	return (await axios.get(`/api/find?collection=${collectionName}&id=${id}`)).data;
 }
 
 // Returns field's database field name or label
@@ -291,7 +291,7 @@ export const SIZES = { ...env_sizes, original: 0, thumbnail: 320 } as const;
 
 //Save Collections data to database
 export async function saveFormData({ data, _collection, _mode, id }: { data: any; _collection?: Schema; _mode?: 'edit' | 'create'; id?: string }) {
-	console.log('saveFormData was called');
+	//console.log('saveFormData was called');
 	const $mode = _mode || get(mode);
 	const $collection = _collection || get(collection);
 	const $entryData = get(entryData);
@@ -307,47 +307,6 @@ export async function saveFormData({ data, _collection, _mode, id }: { data: any
 			formData.append('_id', id || $entryData._id);
 			return await axios.patch(`/api/${$collection.name}`, formData, config).then((res) => res.data);
 	}
-}
-
-// Clone FormData to database
-export async function cloneData(data) {
-	const $collection = get(collection);
-	const formData = data instanceof FormData ? data : await col2formData(data);
-	if (!formData) return;
-	await fetch(`/api/${$collection.name}`, {
-		method: 'POST',
-		body: formData
-	});
-}
-
-// Publish FormData to database
-export async function publishData(id) {
-	const $collection = get(collection);
-	await fetch(`/api/${$collection.name}/${id}`, {
-		method: 'PATCH',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ published: true })
-	});
-}
-
-// Unpublish FormData to database
-export async function unpublishData(id) {
-	const $collection = get(collection);
-	await fetch(`/api/${$collection.name}/${id}`, {
-		method: 'PATCH',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ published: false })
-	});
-}
-
-// Schedule FormData to database
-export async function scheduleData(id, date) {
-	const $collection = get(collection);
-	await fetch(`/api/${$collection.name}/${id}`, {
-		method: 'PATCH',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ publishDate: date })
-	});
 }
 
 // Delete FormData
