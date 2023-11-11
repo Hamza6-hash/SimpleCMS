@@ -1,15 +1,5 @@
 <script lang="ts">
-	import {
-		contentLanguage,
-		categories,
-		collection,
-		mode,
-		entryData,
-		deleteEntry,
-		handleSidebarToggle,
-		toggleLeftSidebar,
-		storeListboxValue
-	} from '@src/stores/store';
+	import { contentLanguage, categories, collection, mode, entryData, modifyEntry, handleSidebarToggle, toggleLeftSidebar } from '@src/stores/store';
 
 	import axios from 'axios';
 	import { writable } from 'svelte/store';
@@ -94,7 +84,7 @@
 			})
 		);
 
-		console.log(tableData);
+		//console.log(tableData);
 
 		const storedValue = localStorage.getItem(`TanstackConfiguration-${$collection.name}`);
 		const columns = storedValue ? JSON.parse(storedValue) : defaultColumns;
@@ -261,18 +251,64 @@
 		}
 	}
 
-	// Tick Row Process Entry (formerly $deleteEntry)processEntry function
-	$deleteEntry = async () => {
-		let deleteList: Array<string> = [];
+	// Tick Row - modify STATUS of an Entry
+	$modifyEntry = async (status: 'delete' | 'publish' | 'unpublish' | 'schedule' | 'clone' | 'test') => {
+		// Initialize an array to store the IDs of the items to be modified
+		let modifyList: Array<string> = [];
+
+		// Loop over the tickMap object
 		for (let item in tickMap) {
-			//console.log(tableData[item]);
-			tickMap[item] && deleteList.push(tableData[item]._id);
+			// If the item is ticked, add its ID to the modifyList
+			tickMap[item] && modifyList.push(tableData[item]._id);
 		}
-		if (deleteList.length == 0) return;
+
+		// If no items are ticked, exit the function
+		if (modifyList.length == 0) return;
+
+		// Initialize a new FormData object
 		let formData = new FormData();
-		formData.append('ids', JSON.stringify(deleteList));
-		await axios.delete(`/api/${$collection.name}`, { data: formData });
+
+		// Define a map from input status to output status
+		let statusMap = {
+			delete: 'deleted',
+			publish: 'published',
+			unpublish: 'unpublished',
+			schedule: 'scheduled',
+			clone: 'cloned',
+			test: 'testing'
+		};
+
+		// Append the IDs of the items to be modified to formData
+		formData.append('ids', JSON.stringify(modifyList));
+
+		// Append the status to formData
+		formData.append('status', statusMap[status]);
+
+		// Use the status to determine which API endpoint to call and what HTTP method to use
+		switch (status) {
+			case 'delete':
+				// If the status is 'Delete', call the delete endpoint
+				await axios.delete(`/api/${$collection.name}`, { data: formData });
+				break;
+			case 'publish':
+			case 'unpublish':
+			case 'clone':
+				await axios.post(`/api/${$collection.name}/clone`, formData);
+				break;
+			case 'schedule':
+				await axios.post(`/api/${$collection.name}/schedule`, formData);
+				break;
+
+			case 'test':
+				// If the status is 'publish', 'unpublish', 'schedule', or 'clone', call the patch endpoint
+				await axios.patch(`/api/${$collection.name}/setStatus`, formData).then((res) => res.data);
+				break;
+		}
+
+		// Refresh the collection
 		refresh($collection);
+
+		// Set the mode to 'view'
 		mode.set('view');
 	};
 
@@ -364,6 +400,20 @@
 		return $table.getAllLeafColumns().find((col) => {
 			return col.id == name;
 		});
+	}
+
+	// define status badge color
+	function getStatusClass(status) {
+		switch (status) {
+			case 'publish':
+				return 'gradient-tertiary';
+			case 'unpublish':
+				return 'gradient-yellow';
+			case 'schedule':
+				return 'gradient-pink';
+			default:
+				return 'gradient-error';
+		}
 	}
 </script>
 
@@ -494,10 +544,12 @@
 		<thead class="text-dark dark:text-primary-500">
 			{#each $table.getHeaderGroups() as headerGroup}
 				<tr class="divide-x divide-surface-400 border-b border-black dark:border-white">
+					<!-- Tanstack Tickbox -->
 					<th class="!w-6">
 						<TanstackIcons bind:checked={tickAll} />
 					</th>
 
+					<!-- Tanstack Other Headers -->
 					{#each headerGroup.headers as header}
 						<th class="">
 							{#if !header.isPlaceholder}
@@ -537,7 +589,9 @@
 		<tbody>
 			{#each $table.getRowModel().rows as row, index}
 				<tr
-					class="divide-x divide-surface-400"
+					class={`${
+						data?.entryList[index]?.status == 'Unpublished' ? '!bg-yellow-700' : data?.entryList[index]?.status == 'TESTING' ? 'bg-red-800' : ''
+					} divide-x divide-surface-400`}
 					on:keydown
 					on:click={() => {
 						entryData.set(data?.entryList[index]);
@@ -549,6 +603,20 @@
 					<td>
 						<TanstackIcons bind:checked={tickMap[index]} class="ml-1" />
 					</td>
+
+					<!-- <td>
+						<span class="badge rounded-full {getStatusClass(row.status)}">
+							{#if row.status === 'publish'}
+								<iconify-icon icon="bi:hand-thumbs-up-fill" width="24" />
+							{:else if row.status === 'unpublish'}
+								<iconify-icon icon="bi:pause-circle" width="24" />
+							{:else if row.status === 'schedule'}
+								<iconify-icon icon="bi:clock" width="24" />
+							{:else if row.status === 'undefined'}
+								<iconify-icon icon="material-symbols:error" width="24" />
+							{/if}
+						</span>
+					</td> -->
 
 					{#each row.getVisibleCells() as cell}
 						<td>

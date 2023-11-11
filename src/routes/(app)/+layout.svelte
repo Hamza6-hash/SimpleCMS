@@ -13,6 +13,7 @@
 		collection,
 		collectionValue,
 		mode,
+		modifyEntry,
 		defaultContentLanguage,
 		handleSidebarToggle,
 		screenWidth,
@@ -136,11 +137,11 @@
 	}
 
 	//skeleton
-	import { initializeStores, AppShell, Avatar, Modal, getModalStore, popup, Toast, setModeUserPrefers, setModeCurrent } from '@skeletonlabs/skeleton';
+	import { initializeStores, AppShell, Avatar, Modal, popup, Toast, setModeUserPrefers, setModeCurrent } from '@skeletonlabs/skeleton';
 	initializeStores();
 
 	import { modeCurrent } from '@skeletonlabs/skeleton';
-	import type { PopupSettings, ModalSettings, ModalComponent } from '@skeletonlabs/skeleton';
+	import type { PopupSettings } from '@skeletonlabs/skeleton';
 
 	//required for popups to function
 	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
@@ -190,6 +191,7 @@
 	import { get } from 'svelte/store';
 	import type { Schema } from '@src/collections/types';
 	import Loading from '@src/components/Loading.svelte';
+	import MultibuttonToken from './user/components/MultibuttonToken.svelte';
 
 	let dates = { created: '', updated: '', revision: '' };
 
@@ -234,49 +236,6 @@
 	const SeoTitle = `${PUBLIC_SITENAME} - powered with sveltekit`;
 	const SeoDescription = `${PUBLIC_SITENAME} - a modern, powerful, and easy-to-use CMS powered by SvelteKit. Manage your content with ease & take advantage of the latest web technologies.`;
 </script>
-
-<!-- <div>
-	Mode <span class="font-bold text-primary-500">{$mode}</span>
-</div> -->
-
-<!-- TODO: Fix Right And mobile Version of sidebars -->
-<!-- <div
-	class="flex flex-wrap justify-center
- text-xs"
->
-	<div class="mx-2 flex flex-col items-center">
-		Mode
-		<div class="font-bold text-primary-500">{$mode}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		screenWidth
-		<div class="font-bold text-primary-500">{$screenWidth}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		userPreferredState
-		<div class="font-bold text-primary-500">{$userPreferredState}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		toggleLeftSidebar
-		<div class="font-bold text-primary-500">{$toggleLeftSidebar}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		toggleRightSidebar
-		<div class="font-bold text-primary-500">{$toggleRightSidebar}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		togglePageHeader
-		<div class="font-bold text-primary-500">{$togglePageHeader}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		togglePageFooter
-		<div class="font-bold text-primary-500">{$togglePageFooter}</div>
-	</div>
-	<div class="mx-2 flex flex-col items-center">
-		storeListboxValue
-		<div class="font-bold text-primary-500">{$storeListboxValue}</div>
-	</div>
-</div> -->
 
 <svelte:head>
 	<!--Basic SEO-->
@@ -454,7 +413,8 @@ lg:overflow-y-scroll lg:max-h-screen}"
 								on:click={signOut}
 								type="submit"
 								value="Sign out"
-								class="btn-icon hover:bg-surface-500 hover:text-white">
+								class="btn-icon hover:bg-surface-500 hover:text-white"
+							>
 								<iconify-icon icon="uil:signout" width="26" />
 							</button>
 
